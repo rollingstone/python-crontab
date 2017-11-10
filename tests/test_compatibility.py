@@ -96,6 +96,16 @@ class CompatTestCase(unittest.TestCase):
         job = self.crontab.new('command', comment="Test comment")
         self.assertEqual(job.render(), "# Test comment\n* * * * * command")
 
+    def test_05_ansible(self):
+        """Crontab shouldn't break ansible cronjobs"""
+        cron = crontab.CronTab(tab="""
+#Ansible: {job_name}
+* * * * * {command}
+""")
+        self.assertEqual(cron[0].comment, '{job_name}')
+        self.assertEqual(cron[0].command, '{command}')
+        self.assertEqual(str(cron[0]), '#Ansible: {job_name}\n* * * * * {command}')
+
 if __name__ == '__main__':
     test_support.run_unittest(
        CompatTestCase,

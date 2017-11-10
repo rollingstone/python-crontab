@@ -104,7 +104,7 @@ except ImportError:
                 " install ordereddict 1.1 from pypi for python2.6")
 
 __pkgname__ = 'python-crontab'
-__version__ = '2.2.6'
+__version__ = '2.2.7'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -528,6 +528,9 @@ class CronItem(object):
         self.last_run = None
         self.env = OrderedVariableList(job=self)
 
+        # Marker labels Ansible jobs etc
+        self.marker = None
+        self.pre_comment = False
         self._log = None
 
         # Initalise five cron slices using static info.
@@ -554,7 +557,12 @@ class CronItem(object):
 
     def set_comment(self, cmt):
         """Set the comment and don't filter"""
-        self.comment = cmt
+        if cmt and cmt[:8] == 'Ansible:':
+            self.marker = 'Ansible'
+            self.pre_comment = True
+            self.comment = cmt[8:].lstrip()
+        else:
+            self.comment = cmt
 
     def parse(self, line):
         """Parse a cron line string and save the info as the objects."""
@@ -604,11 +612,17 @@ class CronItem(object):
             user = self.user + ' '
         result = u"%s %s%s" % (unicode(self.slices), user, self.command)
         if self.comment:
-            self.comment = _unicode(self.comment)
-            if SYSTEMV:
-                result = "# " + self.comment + "\n" + result
+            comment = self.comment = _unicode(self.comment)
+            if self.marker:
+                comment = u"#%s: %s" % (self.marker, comment)
             else:
-                result += u" # " + self.comment
+                comment = u"# " + comment
+
+            if SYSTEMV or self.pre_comment:
+                result = comment + "\n" + result
+            else:
+                result += ' ' + comment
+
         if not self.enabled:
             result = u"# " + result
         return unicode(self.env) + result
