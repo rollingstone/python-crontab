@@ -106,6 +106,14 @@ class CompatTestCase(unittest.TestCase):
         self.assertEqual(cron[0].command, '{command}')
         self.assertEqual(str(cron[0]), '#Ansible: {job_name}\n* * * * * {command}')
 
+    def test_06_escaped_chars(self):
+        """Do escaped chars parse correctly when read in"""
+        cron = crontab.CronTab(tab="""
+* * * * * cmd arg_with_\#_character # comment
+""")
+        self.assertEqual(cron[0].command, 'cmd arg_with_\\#_character')
+        self.assertEqual(cron[0].comment, 'comment')
+
 if __name__ == '__main__':
     test_support.run_unittest(
        CompatTestCase,
