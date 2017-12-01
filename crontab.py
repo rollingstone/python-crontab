@@ -297,7 +297,6 @@ class CronTab(object):
                         value = value.strip(quot)
                         break
                 self._parked_env[name.strip()] = value
-                self.lines.append((name, value))
                 return None
 
         elif not self.crons and self._parked_env:
@@ -386,10 +385,10 @@ class CronTab(object):
                 if not line.is_valid() and not errors:
                     line.enabled = False
                 crons.append(unicode(line))
-            elif isinstance(line, tuple):
-                crons.append(u'{}={}'.format(line[0], line[1]))
 
-        result = u'\n'.join(crons)
+        # Environment variables are attached to cron lines so order will
+        # always work no matter how you add lines in the middle of the stack.
+        result = unicode(self.env) + u'\n'.join(crons)
         if result and result[-1] not in (u'\n', u'\r'):
             result += u'\n'
         return result
