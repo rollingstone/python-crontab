@@ -47,6 +47,24 @@ crontab.CRONCMD = "%s %s" % (sys.executable, os.path.join(TEST_DIR, 'data', 'cro
 def flush():
     pass
 
+class Attribute(object):
+    def __init__(self, obj, attr, value):
+        self.obj = obj
+        self.attr = attr
+        self.value = value
+
+    def __enter__(self, *args, **kw):
+        if hasattr(self.obj, self.attr):
+            self.previous = getattr(self.obj, self.attr)
+        setattr(self.obj, self.attr, self.value)
+
+    def __exit__(self, *args, **kw):
+        if hasattr(self, 'previous'):
+            setattr(self.obj, self.attr, self.previous)
+        else:
+            delattr(self.obj, self.attr)
+
+
 class UseTestCase(unittest.TestCase):
     """Test use documentation in crontab."""
     def setUp(self):
@@ -170,6 +188,13 @@ class UseTestCase(unittest.TestCase):
         (out, err) = pipe.communicate()
         self.assertEqual(err, b'')
         self.assertEqual(out, b'--abc=two|-a|-h|one\n')
+
+    def test_07_zero_padding(self):
+        """Can we get zero padded output"""
+        cron = crontab.CronTab(tab="02 3-5 2,4 */2 01 cmd")
+        self.assertEqual(str(cron), '2 3-5 2,4 */2 1 cmd\n')
+        with Attribute(crontab, 'ZERO_PAD', True):
+            self.assertEqual(str(cron), '02 03-05 02,04 */2 01 cmd\n')
 
     def tearDown(self):
         for filename in self.filenames:
