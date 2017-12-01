@@ -573,9 +573,9 @@ class CronItem(object):
         if not line or line[0] == '#':
             self.enabled = False
             line = line[1:].strip()
-        else:
-            self._set_parse(ITEMREX.findall(line))
-            self._set_parse(SPECREX.findall(line))
+        # We parse all lines so we can detect disabled entries.
+        self._set_parse(ITEMREX.findall(line))
+        self._set_parse(SPECREX.findall(line))
 
     def _set_parse(self, result):
         """Set all the parsed variables into the item"""
