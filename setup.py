@@ -25,7 +25,7 @@ import os
 if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
 # Grab description for Pypi
-with open('README.md') as fhl:
+with open('README.rst') as fhl:
     description = fhl.read()
 
 # Used for rpm building
