@@ -1,3 +1,8 @@
+Python Crontab
+--------------
+
+.. image:: https://github.com/doctormo/python-crontab/blob/master/branding.svg
+
 .. image:: https://badge.fury.io/py/python-crontab.svg
     :target: https://badge.fury.io/py/python-crontab
 .. image:: https://img.shields.io/badge/License-LGPL%20v3-blue.svg
