@@ -140,6 +140,10 @@ import platform
 PY3 = platform.python_version()[0] == '3'
 WINOS = platform.system() == 'Windows'
 SYSTEMV = not WINOS and os.uname()[0] in ["SunOS", "AIX", "HP-UX"]
+SYSTEMV = not WINOS and (
+     os.uname()[0] in ["SunOS", "AIX", "HP-UX"]
+  or os.uname()[4] in ["mips"]
+)
 
 # Switch this on if you want your crontabs to have zero padding.
 ZERO_PAD = False
