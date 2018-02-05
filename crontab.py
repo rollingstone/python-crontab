@@ -1217,7 +1217,7 @@ class CronRange(object):
             except SundayError:
                 self.seq = 1
                 value = "0-0"
-            if self.seq < 1 or self.seq > self.slice.max - 1:
+            if self.seq < 1 or self.seq > self.slice.max:
                 raise ValueError("Sequence can not be divided by zero or max")
         if value.count('-') == 1:
             vfrom, vto = value.split('-')

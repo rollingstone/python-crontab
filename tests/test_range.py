@@ -75,6 +75,18 @@ class RangeTestCase(unittest.TestCase):
         """)
         self.assertEqual(len(tab), 1)
         
+    def test_03_inevery(self):
+        """Inside of Every"""
+        tab = CronTab(tab="""
+*    *    *    *    *   command
+*/59 *    *    *    *   command
+*    */23 *    *    *   command
+*    *    */30 *    *   command
+*    *    *    */11 *   command
+*    *    *    *    */7 command
+        """)
+        self.assertEqual(len(tab), 6, str(tab))
+
     def test_04_zero_seq(self):
         tab = CronTab(tab="""
 */0 * * * * command
