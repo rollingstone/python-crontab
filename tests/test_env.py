@@ -182,10 +182,10 @@ SECONDARY=fork
     def test_11_empty_flow(self):
         """Test what happends when an env is involved in flow"""
         tab = """
-# 
-# 
+# A
+# B
 MAILTO=""
-#  
+# C
 */10 * * * * /home/pi/job.py # any job
 """
         cron = CronTab(tab=tab)
@@ -194,9 +194,9 @@ MAILTO=""
         self.assertTrue(job.is_valid())
         self.assertEqual(str(cron), """MAILTO=""
 
-# 
-# 
-#  
+# A
+# B
+# C
 */10 * * * * /home/pi/job.py # any job
 
 1 12 * * 3 update.py # update
@@ -209,9 +209,9 @@ MAILTO=""
         with open(filename, 'r') as fhl:
             self.assertEqual(fhl.read(), """MAILTO=""
 
-# 
-# 
-#  
+# A
+# B
+# C
 */10 * * * * /home/pi/job.py # any job
 """)
         os.unlink(filename)

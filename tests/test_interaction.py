@@ -21,12 +21,11 @@ Test crontab interaction.
 
 import re
 import os
-import sys
-
-sys.path.insert(0, '../')
-
 import unittest
+
 from crontab import CronTab, CronSlices, CronSlice, PY3
+from .utils import LoggingMixin
+
 try:
     from test import test_support
 except ImportError:
@@ -35,7 +34,7 @@ except ImportError:
 TEST_DIR = os.path.dirname(__file__)
 
 if PY3:
-    unicode = str
+    unicode = str #pylint: disable=redefined-builtin
 
 COMMANDS = [
     'firstcommand',
@@ -43,6 +42,7 @@ COMMANDS = [
     'byweek',
     'disabled',
     'spaced',
+    'python /example_app/testing.py',
     'rebooted',
 ]
 
@@ -58,31 +58,32 @@ RESULT_TAB = """# First Comment
 # * * * * * disabled
 0 5 * * * spaced # Comment  Two
 
+*/59 * * * * python /example_app/testing.py # monitorCron
 
 @reboot rebooted # re-id
 # Last Comment @has this # extra
 """
 
-class InteractionTestCase(unittest.TestCase):
+class InteractionTestCase(LoggingMixin, unittest.TestCase):
     """Test basic functionality of crontab."""
+    log_name = 'crontab'
+
     def setUp(self):
+        super(InteractionTestCase, self).setUp()
         self.crontab = CronTab(tabfile=os.path.join(TEST_DIR, 'data', 'test.tab'))
 
     def test_01_presevation(self):
         """All Entries Re-Rendered Correctly"""
         results = RESULT_TAB.split('\n')
-        line_no = 0
-        for line in self.crontab.lines:
+        for line_no, line in enumerate(self.crontab.lines):
             self.assertEqual(str(line), results[line_no])
-            line_no += 1
 
     def test_02_access(self):
         """All Entries Are Accessable"""
-        line_no = 0
-        for job in self.crontab:
+        for line_no, job in enumerate(self.crontab):
             self.assertEqual(str(job.command), COMMANDS[line_no])
-            line_no += 1
-        self.assertEqual(line_no, 6)
+        else: # pylint: disable=useless-else-on-loop
+            self.assertEqual(line_no + 1, 7)
 
     def test_03_blank(self):
         """Render Blank"""
@@ -109,6 +110,7 @@ class InteractionTestCase(unittest.TestCase):
         self.assertEqual(job.render(), '* 4 5 6 0 fields')
 
     def test_05_multiple_fields(self):
+        """Test mutliple named fields"""
         job = self.crontab.new(command='fields')
         job.hour.on(4, 6, 7)
         self.assertEqual(job.render(), '* 4,6,7 * * * fields')
@@ -181,7 +183,7 @@ class InteractionTestCase(unittest.TestCase):
         """Plural API"""
         job = self.crontab.new(command='plural')
         job.minutes.every(4)
-        job.hours.on(5,6)
+        job.hours.on(5, 6)
         job.day.on(4)
         job.months.on(2)
         self.assertEqual(unicode(job), '*/4 5,6 4 2 * plural')
@@ -257,7 +259,7 @@ class InteractionTestCase(unittest.TestCase):
         self.assertEqual(len(cmds), 1)
         self.assertEqual(cmds[0].comment, 'Comment One')
 
-        cmds = list(self.crontab.find_comment(re.compile('stc\w')))
+        cmds = list(self.crontab.find_comment(re.compile(r'stc\w')))
         self.assertEqual(len(cmds), 0)
 
     def test_20_write(self):
@@ -271,7 +273,7 @@ class InteractionTestCase(unittest.TestCase):
         cron = '# start of tab\n'
         for i in range(10):
             crontab = CronTab(tab=cron)
-            list(crontab.new(command='multi%d' % i))
+            p = list(crontab.new(command='multi%d' % i))
             cron = unicode(crontab)
             crontab = CronTab(tab=cron)
             list(crontab.find_command('multi%d' % i))[0].delete()
@@ -297,9 +299,9 @@ class InteractionTestCase(unittest.TestCase):
         self.assertEqual(unicode(job), '59 23 31 12 * max')
 
     def test_24_special_r(self):
-        """Read Specials"""
+        """Special formats are read and written"""
         tab = CronTab(tabfile=os.path.join(TEST_DIR, 'data', 'specials_enc.tab'))
-        self.assertEqual(tab.render(), """@hourly hourly\n@daily daily\n@daily midnight\n@weekly weekly\n@reboot reboot\n""")
+        self.assertEqual(tab.render(), """@hourly hourly\n@daily daily\n@midnight midnight\n@weekly weekly\n@reboot reboot\n""")
         self.assertEqual(len(list(tab)), 5)
 
     def test_24_special_d(self):
@@ -340,13 +342,14 @@ class InteractionTestCase(unittest.TestCase):
     def test_27_commands(self):
         """Get all commands"""
         self.assertEqual(list(self.crontab.commands),
-                         [u'firstcommand', u'range', u'byweek',
-                          u'disabled', u'spaced', u'rebooted'])
+                         [u'firstcommand', u'range', u'byweek', u'disabled',
+                          u'spaced', u'python /example_app/testing.py',
+                          u'rebooted'])
 
     def test_28_comments(self):
         """Get all comments"""
         self.assertEqual(list(self.crontab.comments),
-                         ['Comment One', 'Comment  Two', 're-id'])
+                         ['Comment One', 'Comment  Two', 'monitorCron', 're-id'])
 
 if __name__ == '__main__':
     test_support.run_unittest(InteractionTestCase)

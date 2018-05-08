@@ -401,6 +401,6 @@ Extra Support
 
  - Support for vixie cron with username addition with user flag
  - Support for SunOS, AIX & HP with compatibility 'SystemV' mode.
- - Python 3.5.2 and Python 2.7/2.6 tested.
+ - Python 3.5.2 and Python 2.7 tested, python 2.6 removed from support.
  - Windows support works for non-system crontabs only.
    ( see mem_cron and file_cron examples above for usage )

@@ -10,6 +10,8 @@
 # * * * * * disabled
  00 5  *   *   *      spaced    # Comment  Two
 
+# monitorCron
+*/59 * * * * python /example_app/testing.py
 
 @reboot rebooted # re-id
 # Last Comment @has this # extra

@@ -18,12 +18,6 @@
 """
 Test crontab ranges.
 """
-
-import os
-import sys
-
-sys.path.insert(0, '../')
-
 import unittest
 from crontab import CronTab, CronSlice, PY3
 try:
@@ -31,12 +25,17 @@ try:
 except ImportError:
     from test import support as test_support
 
-if PY3:
-    unicode = str
+from .utils import LoggingMixin
 
-class RangeTestCase(unittest.TestCase):
+if PY3:
+    unicode = str #pylint: disable=redefined-builtin
+
+class RangeTestCase(LoggingMixin, unittest.TestCase):
     """Test basic functionality of crontab."""
+    log_name = 'crontab'
+
     def setUp(self):
+        super(RangeTestCase, self).setUp()
         self.crontab = CronTab(tab="")
 
     def test_01_atevery(self):
@@ -50,6 +49,11 @@ class RangeTestCase(unittest.TestCase):
 *  *  *  *  8 command
         """)
         self.assertEqual(len(tab), 1)
+        self.assertLog("error", "'61', not in 0-59 for Minutes")
+        self.assertLog("error", "'25', not in 0-23 for Hours")
+        self.assertLog("error", "'32', not in 1-31 for Day of Month")
+        self.assertLog("error", "'13', not in 1-12 for Month")
+        self.assertLog("error", "'8', not in 0-6 for Day of Week")
 
     def test_02_withinevery(self):
         """Within Every"""
@@ -62,6 +66,11 @@ class RangeTestCase(unittest.TestCase):
 *    *    *    *    1-8 command
         """)
         self.assertEqual(len(tab), 1)
+        self.assertLog("error", "'61', not in 0-59 for Minutes")
+        self.assertLog("error", "'25', not in 0-23 for Hours")
+        self.assertLog("error", "'32', not in 1-31 for Day of Month")
+        self.assertLog("error", "'13', not in 1-12 for Month")
+        self.assertLog("error", "'8', not in 0-6 for Day of Week")
 
     def test_03_outevery(self):
         """Out of Every"""
@@ -74,7 +83,12 @@ class RangeTestCase(unittest.TestCase):
 *    *    *    *    */8 command
         """)
         self.assertEqual(len(tab), 1)
-        
+        self.assertLog("error", "'61', not in 0-59 for Minutes")
+        self.assertLog("error", "'25', not in 0-23 for Hours")
+        self.assertLog("error", "'32', not in 1-31 for Day of Month")
+        self.assertLog("error", "'13', not in 1-12 for Month")
+        self.assertLog("error", "'8', not in 0-6 for Day of Week")
+
     def test_03_inevery(self):
         """Inside of Every"""
         tab = CronTab(tab="""
@@ -88,10 +102,12 @@ class RangeTestCase(unittest.TestCase):
         self.assertEqual(len(tab), 6, str(tab))
 
     def test_04_zero_seq(self):
+        """Zero divisor in range"""
         tab = CronTab(tab="""
 */0 * * * * command
         """)
         self.assertEqual(len(tab), 0)
+        self.assertLog("error", "Sequence can not be divided by zero or max")
 
     def test_14_invalid_range(self):
         """No numerator in range"""
@@ -100,12 +116,13 @@ class RangeTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             tab.render(errors=True)
         self.assertEqual(unicode(tab), "# DISABLED LINE\n# /10 * * * * command\n")
+        self.assertLog('error', u"No enumeration for Minutes: '/10'")
 
     def test_05_sunday(self):
         """Test all possible day of week combinations"""
-        for (a, b) in (
-          ("7", "0"), ("5-7", "0,5-6"), ("1-7","*"), ("*/7", "0"),
-          ("0-6", "*"), ("2-7", "0,2-6"), ("1-5", "1-5"), ("0-5", "0-5")):
+        for (a, b) in (\
+              ("7", "0"), ("5-7", "0,5-6"), ("1-7", "*"), ("*/7", "0"),\
+              ("0-6", "*"), ("2-7", "0,2-6"), ("1-5", "1-5"), ("0-5", "0-5")):
             v = str(CronSlice(4, a))
             self.assertEqual(v, b, "%s != %s, from %s" % (v, b, a))
 
@@ -113,8 +130,7 @@ class RangeTestCase(unittest.TestCase):
         """Test backwards ranges for error"""
         tab = CronTab(tab="* * * * 3-1 command")
         self.assertEqual(str(tab), "* * * * 1-3 command\n")
+        self.assertLog("warning", "Bad range '3-1'")
 
 if __name__ == '__main__':
-    test_support.run_unittest(
-       RangeTestCase,
-    )
+    test_support.run_unittest(RangeTestCase)
