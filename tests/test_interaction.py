@@ -351,5 +351,17 @@ class InteractionTestCase(LoggingMixin, unittest.TestCase):
         self.assertEqual(list(self.crontab.comments),
                          ['Comment One', 'Comment  Two', 'monitorCron', 're-id'])
 
+    def test_29_set_lines(self):
+        """Set crontab lines directly"""
+        cron = CronTab(tab='')
+        cron.lines = [
+            str(self.crontab.lines[5]),
+        ]
+        self.assertEqual(str(cron), '\n*/30 * * * * firstcommand\n')
+
+        with self.assertRaises(AttributeError):
+            cron.crons = ['A']
+
+
 if __name__ == '__main__':
     test_support.run_unittest(InteractionTestCase)

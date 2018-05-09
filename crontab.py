@@ -106,7 +106,7 @@ except ImportError:
                           " install ordereddict 1.1 from pypi for python2.6")
 
 __pkgname__ = 'python-crontab'
-__version__ = '2.3.0'
+__version__ = '2.3.1'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^\n]*?)(\s+#\s*([^\n]*)|$)')
@@ -252,6 +252,16 @@ class CronTab(object):
                 return {'u': self._user}
         return {}
 
+    def __setattr__(self, name, value):
+        """Catch setting crons and lines directly"""
+        if name == 'lines' and value:
+            for line in value:
+                self.append(CronItem(line, cron=self), line, read=True)
+        elif name == 'crons' and value:
+            raise AttributeError("You can NOT set crons attribute directly")
+        else:
+            super(CronTab, self).__setattr__(name, value)
+
     def read(self, filename=None):
         """
         Read in the crontab from the system into the object, called
@@ -278,8 +288,7 @@ class CronTab(object):
                 raise IOError("Read crontab %s: %s" % (self.user, err))
             lines = out.decode('utf-8').split("\n")
 
-        for line in lines:
-            self.append(CronItem(line, cron=self), line, read=True)
+        self.lines = lines
 
     def append(self, item, line='', read=False):
         """Append a CronItem object to this CronTab"""
