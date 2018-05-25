@@ -106,7 +106,7 @@ except ImportError:
                           " install ordereddict 1.1 from pypi for python2.6")
 
 __pkgname__ = 'python-crontab'
-__version__ = '2.3.1'
+__version__ = '2.3.2'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^\n]*?)(\s+#\s*([^\n]*)|$)')
@@ -150,7 +150,6 @@ SYSTEMV = not WINOS and (
 # Switch this on if you want your crontabs to have zero padding.
 ZERO_PAD = False
 
-logging.basicConfig()
 LOG = logging.getLogger('crontab')
 
 CRONCMD = "/usr/bin/crontab"
