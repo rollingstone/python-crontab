@@ -88,7 +88,7 @@ class InteractionTestCase(LoggingMixin, unittest.TestCase):
     def test_03_blank(self):
         """Render Blank"""
         job = self.crontab.new(command='blank')
-        self.assertEqual(repr(job), '<CronJob \'* * * * * blank\'>')
+        self.assertEqual(repr(job), '<CronItem \'* * * * * blank\'>')
         self.assertEqual(job.render(), '* * * * * blank')
 
     def test_04_number(self):

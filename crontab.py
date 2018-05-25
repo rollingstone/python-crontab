@@ -819,7 +819,7 @@ class CronItem(object):
         return self.slices[4]
 
     def __repr__(self):
-        return "<CronJob '%s'>" % unicode(self)
+        return "<CronItem '%s'>" % unicode(self)
 
     def __len__(self):
         return len(unicode(self))
