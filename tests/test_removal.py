@@ -124,6 +124,17 @@ class RemovalTestCase(unittest.TestCase):
             crontab.remove(item)
         self.assertEqual(len(crontab), 0)
 
+    def test_11_remove_generator(self):
+        """Remove jobs from the find generator"""
+        tabs = self.crontab.find_command('command2')
+        self.crontab.remove(tabs)
+        self.assertEqual(len(self.crontab), 2)
+
+    def test_12_remove_nonsense(self):
+        """Fail to remove bad type"""
+        self.assertRaises(TypeError, self.crontab.remove, 5)
+        self.assertRaises(TypeError, self.crontab.remove, "foo")
+
     def get_new_file(self, name):
         """Gets a filename and records it for deletion"""
         this_dir = os.path.dirname(__file__)

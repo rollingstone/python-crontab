@@ -86,6 +86,7 @@ import os
 import re
 import shlex
 
+import types
 import codecs
 import logging
 import tempfile
@@ -106,7 +107,7 @@ except ImportError:
                           " install ordereddict 1.1 from pypi for python2.6")
 
 __pkgname__ = 'python-crontab'
-__version__ = '2.3.2'
+__version__ = '2.3.3'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^\n]*?)(\s+#\s*([^\n]*)|$)')
@@ -479,7 +480,14 @@ class CronTab(object):
         """Remove a selected cron from the crontab."""
         result = 0
         for item in items:
-            result += self._remove(item)
+            if isinstance(item, (list, tuple, types.GeneratorType)):
+                for subitem in item:
+                    result += self._remove(subitem)
+            elif isinstance(item, CronItem):
+                result += self._remove(item)
+            else:
+                raise TypeError("You may only remove CronItem objects, "\
+                    "please use remove_all() to specify by name, id, etc.")
         return result
 
     def _remove(self, item):
